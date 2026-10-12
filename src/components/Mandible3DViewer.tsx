@@ -258,6 +258,7 @@ export interface Technique3DConfig {
   depth: string;
   numbness: string;
   targetNerves: string[];
+  recommendedOpening: number; // percentage (0-100)
 }
 
 export const TECHNIQUES_3D: Record<string, Technique3DConfig> = {
@@ -275,7 +276,8 @@ export const TECHNIQUES_3D: Record<string, Technique3DConfig> = {
     needleAngle: 'Шприц спирається на премоляри протилежного боку (34-35), кут 40–45°',
     depth: '15–20 мм (обов’язковий упор у кістку!)',
     numbness: 'Зуби 4.8–4.1, тіло щелепи, слизова губи та підборіддя, 2/3 язика',
-    targetNerves: ['N. alveolaris inferior', 'N. lingualis']
+    targetNerves: ['N. alveolaris inferior', 'N. lingualis'],
+    recommendedOpening: 85 // Wide mouth opening
   },
   torusal: {
     id: 'torusal',
@@ -291,7 +293,8 @@ export const TECHNIQUES_3D: Record<string, Technique3DConfig> = {
     needleAngle: 'Шприц із протилежного кута рота, перпендикулярно до внутрішньої поверхні гілки',
     depth: '5–10 мм (до контакту з кістковим валиком)',
     numbness: 'Одночасна блокада трьох нервів: n. alveolaris inferior, n. lingualis, n. buccalis!',
-    targetNerves: ['N. alveolaris inferior', 'N. lingualis', 'N. buccalis']
+    targetNerves: ['N. alveolaris inferior', 'N. lingualis', 'N. buccalis'],
+    recommendedOpening: 90
   },
   tuberal: {
     id: 'tuberal',
@@ -307,7 +310,8 @@ export const TECHNIQUES_3D: Record<string, Technique3DConfig> = {
     needleAngle: 'Догори, назад і всередину під кутом 45° по кістці горба щелепи',
     depth: '20–25 мм (НЕ глибше! Ризик пошкодження plexus venosus pterygoideus)',
     numbness: 'Моляри верхньої щелепи (1.8, 1.7, частково 1.6), окістя та щокова слизова',
-    targetNerves: ['Rami alveolares superiores posteriores']
+    targetNerves: ['Rami alveolares superiores posteriores'],
+    recommendedOpening: 40 // Half-open mouth so cheek relaxes
   },
   infraorbital: {
     id: 'infraorbital',
@@ -323,7 +327,8 @@ export const TECHNIQUES_3D: Record<string, Technique3DConfig> = {
     needleAngle: 'Знизу догори, ззаду та назовні в canalis infraorbitalis',
     depth: '8–12 мм (фіксація пальцем нижнього очного краю для захисту орбіти)',
     numbness: 'Зуби 1.1–1.5, кістка, крило носа, верхня губа, нижня повіка',
-    targetNerves: ['Rami alveolares superiores anteriores & medii', 'N. infraorbitalis']
+    targetNerves: ['Rami alveolares superiores anteriores & medii', 'N. infraorbitalis'],
+    recommendedOpening: 20
   },
   palatal: {
     id: 'palatal',
@@ -339,7 +344,8 @@ export const TECHNIQUES_3D: Record<string, Technique3DConfig> = {
     needleAngle: 'Знизу вгору та трохи ззаду наперед у піднебінне склепіння',
     depth: '3–5 мм (вводити повільно не більше 0.3–0.5 мл під тиском)',
     numbness: 'Слизова та окістя твердого піднебіння від 1.8 до 1.3 зуба',
-    targetNerves: ['N. palatinus major']
+    targetNerves: ['N. palatinus major'],
+    recommendedOpening: 70
   },
   incisive: {
     id: 'incisive',
@@ -355,7 +361,8 @@ export const TECHNIQUES_3D: Record<string, Technique3DConfig> = {
     needleAngle: 'Знизу вгору та назад паралельно осям центральних різців',
     depth: '3–5 мм (об’єм 0.2–0.3 мл)',
     numbness: 'Слизова твердого піднебіння в трикутнику від 1.3 до 2.3 (ікло-ікло)',
-    targetNerves: ['N. nasopalatinus']
+    targetNerves: ['N. nasopalatinus'],
+    recommendedOpening: 65
   },
   mental: {
     id: 'mental',
@@ -371,9 +378,13 @@ export const TECHNIQUES_3D: Record<string, Technique3DConfig> = {
     needleAngle: 'Згори донизу, ззаду наперед та ззовні всередину в устя каналу',
     depth: '5–8 мм',
     numbness: 'Нижня губа, шкіра підборіддя, вестибулярні ясна від 4.5 до 4.1',
-    targetNerves: ['N. mentalis', 'Rami incisivi']
+    targetNerves: ['N. mentalis', 'Rami incisivi'],
+    recommendedOpening: 25
   }
 };
+
+const TMJ_PIVOT_Y = 4.15;
+const TMJ_PIVOT_Z = -5.13;
 
 interface Mandible3DViewerProps {
   highlightTechnique?: string;
@@ -396,6 +407,15 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
 
   // Technique State
   const [activeTechniqueId, setActiveTechniqueId] = useState<string>(highlightTechnique || 'mandibular');
+
+  // Mouth Opening State (0 to 100%, where 0 = closed 0 mm, 100 = 45 mm opening)
+  const [mouthOpening, setMouthOpening] = useState<number>(75);
+  const mouthOpeningRef = useRef<number>(75);
+  const currentMouthAngleRef = useRef<number>(0);
+
+  useEffect(() => {
+    mouthOpeningRef.current = mouthOpening;
+  }, [mouthOpening]);
 
   // Loading state
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
@@ -422,6 +442,7 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
   // Dynamic 3D Refs
   const boneMeshesRef = useRef<THREE.Mesh[]>([]);
   const maxillaGroupRef = useRef<THREE.Group | null>(null);
+  const mandiblePivotRef = useRef<THREE.Group | null>(null);
   const mandibleGroupRef = useRef<THREE.Group | null>(null);
   const gingivaGroupRef = useRef<THREE.Group | null>(null);
   const neuroGroupRef = useRef<THREE.Group | null>(null);
@@ -445,6 +466,8 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
   useEffect(() => {
     if (highlightTechnique && TECHNIQUES_3D[highlightTechnique]) {
       setActiveTechniqueId(highlightTechnique);
+      // Auto-set optimal mouth opening for this technique
+      setMouthOpening(TECHNIQUES_3D[highlightTechnique].recommendedOpening);
     }
   }, [highlightTechnique]);
 
@@ -506,19 +529,28 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
     pointRimLight.position.set(0, -8, 5);
     scene.add(pointRimLight);
 
-    // 5. ANATOMICAL GROUPS
+    // 5. ANATOMICAL GROUPS WITH TMJ PIVOT
     const maxillaGroup = new THREE.Group();
+    
+    // TMJ Hinge Pivot at the Condyles Axis
+    const mandiblePivot = new THREE.Group();
+    mandiblePivot.position.set(0, TMJ_PIVOT_Y, TMJ_PIVOT_Z);
+
     const mandibleGroup = new THREE.Group();
+    mandibleGroup.position.set(0, -TMJ_PIVOT_Y, -TMJ_PIVOT_Z);
+    mandiblePivot.add(mandibleGroup);
+
     const gingivaGroup = new THREE.Group();
     const neuroGroup = new THREE.Group();
 
     maxillaGroupRef.current = maxillaGroup;
+    mandiblePivotRef.current = mandiblePivot;
     mandibleGroupRef.current = mandibleGroup;
     gingivaGroupRef.current = gingivaGroup;
     neuroGroupRef.current = neuroGroup;
 
     scene.add(maxillaGroup);
-    scene.add(mandibleGroup);
+    scene.add(mandiblePivot);
     scene.add(gingivaGroup);
     scene.add(neuroGroup);
 
@@ -608,11 +640,16 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
               if (toothNum < 30) {
                 maxillaGroup.add(mesh.clone());
               } else {
+                // Lower teeth move with the mandible!
                 mandibleGroup.add(mesh.clone());
               }
             } else if (name.includes('gingiva')) {
               mesh.material = gingivaMat;
-              gingivaGroup.add(mesh.clone());
+              if (name.includes('lower')) {
+                mandibleGroup.add(mesh.clone());
+              } else {
+                gingivaGroup.add(mesh.clone());
+              }
             } else if (name.includes('maxilla') || name.includes('sinus')) {
               mesh.material = isXRay ? boneMatXRay : boneMatSolid;
               boneMeshesRef.current.push(mesh);
@@ -620,6 +657,7 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
             } else if (name.includes('mandib')) {
               mesh.material = isXRay ? boneMatXRay : boneMatSolid;
               boneMeshesRef.current.push(mesh);
+              // Mandible body, condyles, alveolar process rotate with mandibleGroup!
               mandibleGroup.add(mesh.clone());
             }
           }
@@ -643,13 +681,22 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
                   neuroGroup.add(mesh.clone());
                 } else if (name.includes('nerve')) {
                   mesh.material = nerveMat;
-                  neuroGroup.add(mesh.clone());
+                  if (name.includes('inferior-alveolar') || name.includes('mental-nerve') || name.includes('incisive-nerve')) {
+                    // Lower nerves move with the mandible canal!
+                    mandibleGroup.add(mesh.clone());
+                  } else {
+                    neuroGroup.add(mesh.clone());
+                  }
                 } else if (name.includes('artery') || name.includes('vein')) {
                   mesh.material = new THREE.MeshStandardMaterial({
                     color: name.includes('artery') ? 0xef4444 : 0x0284c7,
                     roughness: 0.3
                   });
-                  neuroGroup.add(mesh.clone());
+                  if (name.includes('inferior-alveolar')) {
+                    mandibleGroup.add(mesh.clone());
+                  } else {
+                    neuroGroup.add(mesh.clone());
+                  }
                 }
               }
             });
@@ -680,7 +727,6 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
     // 7. 3D CARPULED SURGICAL SYRINGE & NEEDLE
     const needleGroup = new THREE.Group();
     needleGroupRef.current = needleGroup;
-    scene.add(needleGroup);
 
     // Syringe Barrel
     const barrelGeom = new THREE.CylinderGeometry(0.55, 0.55, 12, 16);
@@ -710,20 +756,28 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
     });
     const depotMesh = new THREE.Mesh(depotGeom, depotMat);
     depotMeshRef.current = depotMesh;
-    scene.add(depotMesh);
 
     // Glowing Target Ring Bullseye at Entry
     const targetRingGeom = new THREE.TorusGeometry(0.8, 0.12, 12, 24);
     const targetRingMat = new THREE.MeshBasicMaterial({ color: 0x22d3ee });
     const targetRing = new THREE.Mesh(targetRingGeom, targetRingMat);
     targetRingMeshRef.current = targetRing;
-    scene.add(targetRing);
 
     needleGroup.add(barrelMesh);
     needleGroup.add(needleMesh);
 
-    // Position according to active technique
+    // Attach needle to either mandible or maxilla depending on active technique
     const initCfg = TECHNIQUES_3D[activeTechniqueId] || TECHNIQUES_3D.mandibular;
+    if (initCfg.category === 'lower') {
+      mandibleGroup.add(needleGroup);
+      mandibleGroup.add(depotMesh);
+      mandibleGroup.add(targetRing);
+    } else {
+      scene.add(needleGroup);
+      scene.add(depotMesh);
+      scene.add(targetRing);
+    }
+
     needleGroup.position.set(initCfg.syringeOrigin.x, initCfg.syringeOrigin.y, initCfg.syringeOrigin.z);
     needleGroup.lookAt(initCfg.targetPos.x, initCfg.targetPos.y, initCfg.targetPos.z);
     needleGroup.rotateX(Math.PI / 2);
@@ -765,7 +819,7 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
     const domElement = renderer.domElement;
     domElement.addEventListener('click', handlePointerClick);
 
-    // 9. ANIMATION LOOP
+    // 9. ANIMATION LOOP WITH TMJ ROTATION LERP
     let animationFrameId: number;
     const clock = new THREE.Clock();
 
@@ -774,6 +828,19 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
       controls.update();
 
       const time = clock.getElapsedTime();
+
+      // Smooth Mandible Opening Animation in TMJ
+      if (mandiblePivotRef.current) {
+        // mouthOpening is 0 to 100
+        const targetAngle = (mouthOpeningRef.current / 100) * 0.52; // max ~30 degrees rotation
+        currentMouthAngleRef.current = THREE.MathUtils.lerp(currentMouthAngleRef.current, targetAngle, 0.08);
+
+        mandiblePivotRef.current.rotation.x = currentMouthAngleRef.current;
+        // Natural condylar downward-forward glide in articular eminence
+        mandiblePivotRef.current.position.y = TMJ_PIVOT_Y - Math.sin(currentMouthAngleRef.current) * 0.25;
+        mandiblePivotRef.current.position.z = TMJ_PIVOT_Z + Math.sin(currentMouthAngleRef.current) * 0.35;
+      }
+
       if (depotMeshRef.current) {
         const scale = 1 + Math.sin(time * 3) * 0.12;
         depotMeshRef.current.scale.set(scale, scale, scale);
@@ -810,15 +877,24 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
   // Update Injection Needle & Target on Technique Change
   useEffect(() => {
     const cfg = TECHNIQUES_3D[activeTechniqueId] || TECHNIQUES_3D.mandibular;
-    if (needleGroupRef.current) {
+    
+    // Attach needle to either mandible or scene
+    if (needleGroupRef.current && depotMeshRef.current && targetRingMeshRef.current) {
+      if (cfg.category === 'lower' && mandibleGroupRef.current) {
+        mandibleGroupRef.current.add(needleGroupRef.current);
+        mandibleGroupRef.current.add(depotMeshRef.current);
+        mandibleGroupRef.current.add(targetRingMeshRef.current);
+      } else if (sceneRef.current) {
+        sceneRef.current.add(needleGroupRef.current);
+        sceneRef.current.add(depotMeshRef.current);
+        sceneRef.current.add(targetRingMeshRef.current);
+      }
+
       needleGroupRef.current.position.set(cfg.syringeOrigin.x, cfg.syringeOrigin.y, cfg.syringeOrigin.z);
       needleGroupRef.current.lookAt(cfg.targetPos.x, cfg.targetPos.y, cfg.targetPos.z);
       needleGroupRef.current.rotateX(Math.PI / 2);
-    }
-    if (depotMeshRef.current) {
+
       depotMeshRef.current.position.set(cfg.targetPos.x, cfg.targetPos.y, cfg.targetPos.z);
-    }
-    if (targetRingMeshRef.current) {
       targetRingMeshRef.current.position.set(cfg.targetPos.x, cfg.targetPos.y, cfg.targetPos.z);
       targetRingMeshRef.current.lookAt(cfg.syringeOrigin.x, cfg.syringeOrigin.y, cfg.syringeOrigin.z);
     }
@@ -858,7 +934,7 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
   // Update Layers Visibility
   useEffect(() => {
     if (maxillaGroupRef.current) maxillaGroupRef.current.visible = showMaxilla;
-    if (mandibleGroupRef.current) mandibleGroupRef.current.visible = showMandible;
+    if (mandiblePivotRef.current) mandiblePivotRef.current.visible = showMandible;
     if (gingivaGroupRef.current) gingivaGroupRef.current.visible = showGingiva;
     if (neuroGroupRef.current) neuroGroupRef.current.visible = showNerves;
     if (needleGroupRef.current) needleGroupRef.current.visible = showNeedle;
@@ -930,6 +1006,9 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
     });
   }, [activeQuadrant]);
 
+  // Opening distance in mm
+  const mouthOpeningMm = Math.round((mouthOpening / 100) * 45);
+
   return (
     <div className={`relative bg-[#060E20] border border-cyan-800/40 rounded-2xl overflow-hidden shadow-2xl transition-all ${
       isFullscreen ? 'fixed inset-0 z-50 w-screen h-screen rounded-none border-none flex flex-col' : ''
@@ -970,7 +1049,7 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
         </div>
       </div>
 
-      {/* Technique Selector Ribbon (Changes 3D Needle Trajectory dynamically!) */}
+      {/* Technique Selector Ribbon */}
       <div className="px-2 py-1.5 bg-[#091329] border-b border-slate-800 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0">
         <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold pl-1 flex items-center gap-1 shrink-0">
           <Syringe className="w-3.5 h-3.5" /> Вкол:
@@ -982,6 +1061,7 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
               key={tech.id}
               onClick={() => {
                 setActiveTechniqueId(tech.id);
+                setMouthOpening(tech.recommendedOpening);
                 if (onSelectTechnique) onSelectTechnique(tech);
               }}
               className={`px-2.5 py-1 rounded-xl text-xs whitespace-nowrap font-bold transition-all border shrink-0 ${
@@ -994,6 +1074,65 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
             </button>
           );
         })}
+      </div>
+
+      {/* Interactive Mouth Opening Slider & Controls (FEATURE: ВІДКРИВАННЯ РОТА) */}
+      <div className="px-3 py-1.5 bg-[#0B152E] border-b border-slate-800 flex items-center justify-between gap-2 text-xs shrink-0">
+        <div className="flex items-center gap-1.5 font-bold text-slate-200 shrink-0">
+          <span className="text-sm">👄</span>
+          <span>Відкривання рота:</span>
+          <span className="font-mono text-cyan-300 bg-cyan-950 px-1.5 py-0.5 rounded border border-cyan-800 text-[11px]">
+            {mouthOpeningMm} мм
+          </span>
+        </div>
+
+        {/* Range Slider for smooth TMJ opening */}
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={mouthOpening}
+          onChange={(e) => setMouthOpening(Number(e.target.value))}
+          className="flex-1 accent-cyan-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg max-w-[140px]"
+          title="Регулюйте ступінь відкривання рота"
+        />
+
+        {/* Quick Opening Presets */}
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={() => setMouthOpening(0)}
+            className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold border transition-all ${
+              mouthOpening === 0
+                ? 'bg-cyan-500 text-slate-950 border-cyan-300 shadow-sm'
+                : 'bg-slate-800/80 text-slate-400 border-slate-700 hover:text-slate-200'
+            }`}
+            title="Зімкнуті щелепи (Оклюзія)"
+          >
+            0 мм
+          </button>
+          <button
+            onClick={() => setMouthOpening(50)}
+            className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold border transition-all ${
+              mouthOpening > 25 && mouthOpening < 70
+                ? 'bg-cyan-500 text-slate-950 border-cyan-300 shadow-sm'
+                : 'bg-slate-800/80 text-slate-400 border-slate-700 hover:text-slate-200'
+            }`}
+            title="Напіввідкритий рот (22 мм)"
+          >
+            22 мм
+          </button>
+          <button
+            onClick={() => setMouthOpening(85)}
+            className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold border transition-all ${
+              mouthOpening >= 70
+                ? 'bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 border-cyan-300 font-extrabold shadow-sm'
+                : 'bg-slate-800/80 text-slate-400 border-slate-700 hover:text-slate-200'
+            }`}
+            title="Широко відкритий рот для мандибулярного вколу (ОНМедУ)"
+          >
+            40 мм
+          </button>
+        </div>
       </div>
 
       {/* 3D WebGL Canvas Container */}
