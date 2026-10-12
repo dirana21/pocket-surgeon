@@ -8,6 +8,7 @@ import {
   GraduationCap,
   Sparkles,
   Info,
+  Rotate3d,
   X
 } from 'lucide-react';
 import { ANESTHESIA_TECHNIQUES, AnesthesiaTechnique } from './data/anesthesiaData';
@@ -115,14 +116,19 @@ export const App: React.FC = () => {
               setActiveTab('trainer');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-all ${
+            className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-all relative ${
               activeTab === 'trainer'
                 ? 'text-cyan-400 font-bold'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Crosshair className={`w-5 h-5 mb-0.5 ${activeTab === 'trainer' ? 'text-cyan-400' : ''}`} />
-            <span className="text-[10px]">2D Тренажер</span>
+            <div className="relative">
+              <Rotate3d className={`w-5 h-5 mb-0.5 ${activeTab === 'trainer' ? 'text-cyan-400 animate-spin-slow' : ''}`} />
+              <span className="absolute -top-1 -right-2.5 px-1 py-0.2 text-[8px] font-black bg-cyan-500 text-slate-950 rounded-full">
+                3D
+              </span>
+            </div>
+            <span className="text-[10px]">3D Тренажер</span>
             {activeTab === 'trainer' && (
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-0.5"></span>
             )}

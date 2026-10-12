@@ -15,6 +15,8 @@ import {
 import confetti from 'canvas-confetti';
 import { ANESTHESIA_TECHNIQUES, AnesthesiaTechnique } from '../data/anesthesiaData';
 import { ToothOcclusal } from './AnatomicalTeeth';
+import { Mandible3DViewer } from './Mandible3DViewer';
+import { Rotate3d } from 'lucide-react';
 
 interface Trainer2DProps {
   currentTechnique: AnesthesiaTechnique;
@@ -25,6 +27,7 @@ export const Trainer2D: React.FC<Trainer2DProps> = ({
   currentTechnique,
   onSelectTechnique
 }) => {
+  const [viewportMode, setViewportMode] = useState<'3d' | '2d'>('3d');
   const [examMode, setExamMode] = useState<boolean>(false);
   // Coordinates as percentages of the canvas (0-100)
   const [needlePos, setNeedlePos] = useState<{ x: number; y: number } | null>(null);
@@ -214,10 +217,39 @@ export const Trainer2D: React.FC<Trainer2DProps> = ({
         </div>
       </div>
 
-      {/* Interactive 2D Anatomy Canvas Arena */}
-      <div className="relative bg-[#060E20] border border-cyan-900/40 rounded-2xl overflow-hidden shadow-2xl">
-        {/* Top telemetry HUD bar */}
-        <div className="flex items-center justify-between px-3 py-2 bg-[#0B1326]/90 border-b border-slate-800 text-xs font-mono">
+      {/* 3D X-Ray Model vs 2D Target Switch */}
+      <div className="flex bg-[#070D1B] p-1 rounded-2xl border border-slate-800 shadow-md">
+        <button
+          onClick={() => setViewportMode('3d')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            viewportMode === '3d'
+              ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 shadow-md shadow-cyan-500/20'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Rotate3d className="w-4 h-4" />
+          3D Рентген-модель (X-Ray)
+        </button>
+        <button
+          onClick={() => setViewportMode('2d')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            viewportMode === '2d'
+              ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Crosshair className="w-4 h-4" />
+          2D Приціл топографії
+        </button>
+      </div>
+
+      {viewportMode === '3d' ? (
+        <Mandible3DViewer highlightTechnique={currentTechnique.id} />
+      ) : (
+        /* Interactive 2D Anatomy Canvas Arena */
+        <div className="relative bg-[#060E20] border border-cyan-900/40 rounded-2xl overflow-hidden shadow-2xl">
+          {/* Top telemetry HUD bar */}
+          <div className="flex items-center justify-between px-3 py-2 bg-[#0B1326]/90 border-b border-slate-800 text-xs font-mono">
           <div className="flex items-center gap-2 text-cyan-400">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
             <span>HUD 2D • ТОПОГРАФІЯ ВКОЛУ</span>
@@ -698,6 +730,7 @@ export const Trainer2D: React.FC<Trainer2DProps> = ({
           )}
         </div>
       </div>
+      )}
 
       {/* Clinical landmarks summary card */}
       <div className="bg-[#0B1326] border border-slate-800 rounded-2xl p-4 space-y-3">
