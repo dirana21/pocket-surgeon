@@ -15,7 +15,16 @@ import {
   Sparkles,
   CheckCircle2,
   AlertTriangle,
-  Info
+  Info,
+  Maximize2,
+  Minimize2,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Compass,
+  X,
+  Crosshair,
+  Sliders
 } from 'lucide-react';
 
 export interface ToothDetails {
@@ -137,7 +146,7 @@ export const ALL_32_TEETH: Record<number, ToothDetails> = {
   31: {
     num: 31, fdi: '3.1', nameUk: 'Нижній лівий центральний різець', nameLa: 'Dens incisivus centralis inferior sinister',
     jaw: 'lower', type: 'incisor', rootsCount: 1, canalsCount: 1,
-    innervation: 'N. alveolaris inferior sinister + перехресні анастомози праворуч',
+    innervation: 'N. alveolaris inferior sinister + анастомози праворуч',
     anesthesiaRequired: 'Мандибулярна або інфільтраційна по перехідній складці', isNumbByDefault: false
   },
   32: {
@@ -155,7 +164,7 @@ export const ALL_32_TEETH: Record<number, ToothDetails> = {
   34: {
     num: 34, fdi: '3.4', nameUk: 'Нижній лівий 1-й премоляр', nameLa: 'Dens praemolaris primus inferior sinister',
     jaw: 'lower', type: 'premolar', rootsCount: 1, canalsCount: 1,
-    innervation: 'N. alveolaris inferior sinister (орієнтир циліндра шприца)',
+    innervation: 'N. alveolaris inferior sinister (орієнтир циліндра шприца при правій мандибулярній)',
     anesthesiaRequired: 'Мандибулярна або ментальна анестезія', isNumbByDefault: false
   },
   35: {
@@ -211,7 +220,7 @@ export const ALL_32_TEETH: Record<number, ToothDetails> = {
   44: {
     num: 44, fdi: '4.4', nameUk: 'Нижній правий 1-й премоляр', nameLa: 'Dens praemolaris primus inferior dexter',
     jaw: 'lower', type: 'premolar', rootsCount: 1, canalsCount: 1,
-    innervation: 'N. alveolaris inferior. Верхівка біля foramen mentale!',
+    innervation: 'N. alveolaris inferior. Верхівка кореня біля foramen mentale!',
     anesthesiaRequired: 'Мандибулярна або ментальна анестезія', isNumbByDefault: true
   },
   43: {
@@ -234,16 +243,150 @@ export const ALL_32_TEETH: Record<number, ToothDetails> = {
   }
 };
 
+export interface Technique3DConfig {
+  id: string;
+  title: string;
+  shortTitle: string;
+  category: 'lower' | 'upper';
+  targetPos: { x: number; y: number; z: number };
+  syringeOrigin: { x: number; y: number; z: number };
+  cameraPos: [number, number, number];
+  cameraTarget: [number, number, number];
+  targetName: string;
+  landmarks: string;
+  needleAngle: string;
+  depth: string;
+  numbness: string;
+  targetNerves: string[];
+}
+
+export const TECHNIQUES_3D: Record<string, Technique3DConfig> = {
+  mandibular: {
+    id: 'mandibular',
+    title: 'Мандибулярна анестезія (ОНМедУ)',
+    shortTitle: 'Мандибулярна',
+    category: 'lower',
+    targetPos: { x: -3.3, y: 1.5, z: -4.1 },
+    syringeOrigin: { x: 1.7, y: -0.9, z: 0.9 }, // Opposite premolars 34-35
+    cameraPos: [0, 8, -18],
+    cameraTarget: [-2.5, 1.2, -3.5],
+    targetName: 'Sulcus colli mandibulae (над Lingula mandibulae)',
+    landmarks: 'Латеральний скат plica pterygomandibularis, на 10 мм вище жувальної поверхні нижніх молярів',
+    needleAngle: 'Шприц спирається на премоляри протилежного боку (34-35), кут 40–45°',
+    depth: '15–20 мм (обов’язковий упор у кістку!)',
+    numbness: 'Зуби 4.8–4.1, тіло щелепи, слизова губи та підборіддя, 2/3 язика',
+    targetNerves: ['N. alveolaris inferior', 'N. lingualis']
+  },
+  torusal: {
+    id: 'torusal',
+    title: 'Торусальна анестезія за Вейсбремом',
+    shortTitle: 'Торусальна',
+    category: 'lower',
+    targetPos: { x: -3.0, y: 2.3, z: -3.6 },
+    syringeOrigin: { x: 2.2, y: 0.2, z: 0.5 }, // Opposite mouth corner
+    cameraPos: [-0.5, 9, -16],
+    cameraTarget: [-2.2, 2.0, -3.0],
+    targetName: 'Нижньощелепний валик (Torus mandibulae)',
+    landmarks: 'Борозна між plica pterygomandibularis та щокою, на 0.5 см нижче верхнього 3-го моляра',
+    needleAngle: 'Шприц із протилежного кута рота, перпендикулярно до внутрішньої поверхні гілки',
+    depth: '5–10 мм (до контакту з кістковим валиком)',
+    numbness: 'Одночасна блокада трьох нервів: n. alveolaris inferior, n. lingualis, n. buccalis!',
+    targetNerves: ['N. alveolaris inferior', 'N. lingualis', 'N. buccalis']
+  },
+  tuberal: {
+    id: 'tuberal',
+    title: 'Туберальна анестезія',
+    shortTitle: 'Туберальна',
+    category: 'upper',
+    targetPos: { x: -2.7, y: 3.2, z: -2.3 },
+    syringeOrigin: { x: -3.6, y: -0.5, z: 2.0 }, // Vestibular fold above 2nd molar
+    cameraPos: [-16, 8, -12],
+    cameraTarget: [-2.7, 3.0, -2.0],
+    targetName: 'Горб верхньої щелепи (Tuber maxillae)',
+    landmarks: 'Перехідна складка над 2-м верхнім моляром позаду вилицеальвеолярного гребеня',
+    needleAngle: 'Догори, назад і всередину під кутом 45° по кістці горба щелепи',
+    depth: '20–25 мм (НЕ глибше! Ризик пошкодження plexus venosus pterygoideus)',
+    numbness: 'Моляри верхньої щелепи (1.8, 1.7, частково 1.6), окістя та щокова слизова',
+    targetNerves: ['Rami alveolares superiores posteriores']
+  },
+  infraorbital: {
+    id: 'infraorbital',
+    title: 'Інфраорбітальна анестезія',
+    shortTitle: 'Інфраорбітальна',
+    category: 'upper',
+    targetPos: { x: -2.2, y: 4.8, z: 1.6 },
+    syringeOrigin: { x: -1.5, y: -0.5, z: 5.5 }, // Anterior canine fossa
+    cameraPos: [-6, 10, 20],
+    cameraTarget: [-2.0, 4.0, 1.5],
+    targetName: 'Під’очноямковий отвір (Foramen infraorbitale)',
+    landmarks: 'На 5–7 мм нижче нижньоочного краю на зіницевій лінії (над верхівками 1.4–1.5)',
+    needleAngle: 'Знизу догори, ззаду та назовні в canalis infraorbitalis',
+    depth: '8–12 мм (фіксація пальцем нижнього очного краю для захисту орбіти)',
+    numbness: 'Зуби 1.1–1.5, кістка, крило носа, верхня губа, нижня повіка',
+    targetNerves: ['Rami alveolares superiores anteriores & medii', 'N. infraorbitalis']
+  },
+  palatal: {
+    id: 'palatal',
+    title: 'Піднебінна (Палатинальна) анестезія',
+    shortTitle: 'Піднебінна',
+    category: 'upper',
+    targetPos: { x: -1.5, y: 1.6, z: -1.5 },
+    syringeOrigin: { x: 1.8, y: -0.5, z: -0.5 },
+    cameraPos: [0, -14, -8],
+    cameraTarget: [-1.2, 1.8, -1.0],
+    targetName: 'Великий піднебінний отвір (Foramen palatinum majus)',
+    landmarks: 'На 1 см спереду від заднього краю твердого піднебіння на рівні 3-го моляра',
+    needleAngle: 'Знизу вгору та трохи ззаду наперед у піднебінне склепіння',
+    depth: '3–5 мм (вводити повільно не більше 0.3–0.5 мл під тиском)',
+    numbness: 'Слизова та окістя твердого піднебіння від 1.8 до 1.3 зуба',
+    targetNerves: ['N. palatinus major']
+  },
+  incisive: {
+    id: 'incisive',
+    title: 'Різцева (Назопалатинальна) анестезія',
+    shortTitle: 'Різцева',
+    category: 'upper',
+    targetPos: { x: -0.2, y: 1.5, z: 2.1 },
+    syringeOrigin: { x: 0.0, y: -2.0, z: 5.0 },
+    cameraPos: [0, -10, 10],
+    cameraTarget: [0, 1.5, 2.0],
+    targetName: 'Різцевий отвір (Foramen incisivum)',
+    landmarks: 'Позаду центральних різців 1.1 та 2.1 біля основи різцевого сосочка (Papilla incisiva)',
+    needleAngle: 'Знизу вгору та назад паралельно осям центральних різців',
+    depth: '3–5 мм (об’єм 0.2–0.3 мл)',
+    numbness: 'Слизова твердого піднебіння в трикутнику від 1.3 до 2.3 (ікло-ікло)',
+    targetNerves: ['N. nasopalatinus']
+  },
+  mental: {
+    id: 'mental',
+    title: 'Ментальна анестезія',
+    shortTitle: 'Ментальна',
+    category: 'lower',
+    targetPos: { x: -2.0, y: -1.8, z: 0.9 },
+    syringeOrigin: { x: -3.5, y: 1.5, z: -1.5 },
+    cameraPos: [-12, 0, 14],
+    cameraTarget: [-2.0, -1.5, 0.9],
+    targetName: 'Підборідний отвір (Foramen mentale)',
+    landmarks: 'Перехідна складка між коренями премолярів 4.4 та 4.5 на середині висоти щелепи',
+    needleAngle: 'Згори донизу, ззаду наперед та ззовні всередину в устя каналу',
+    depth: '5–8 мм',
+    numbness: 'Нижня губа, шкіра підборіддя, вестибулярні ясна від 4.5 до 4.1',
+    targetNerves: ['N. mentalis', 'Rami incisivi']
+  }
+};
+
 interface Mandible3DViewerProps {
   highlightTechnique?: string;
   selectedTooth?: number | null;
   onSelectTooth?: (toothNumber: number) => void;
+  onSelectTechnique?: (tech: any) => void;
 }
 
 export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
   highlightTechnique = 'mandibular',
   selectedTooth = null,
-  onSelectTooth
+  onSelectTooth,
+  onSelectTechnique
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -251,26 +394,32 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
 
+  // Technique State
+  const [activeTechniqueId, setActiveTechniqueId] = useState<string>(highlightTechnique || 'mandibular');
+
   // Loading state
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // Fullscreen & UI Panels
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [showLayersDrawer, setShowLayersDrawer] = useState<boolean>(false);
+
   // Anatomical Visibility Layers
   const [isXRay, setIsXRay] = useState<boolean>(true);
-  const [showMaxilla, setShowMaxilla] = useState<boolean>(true); // Верхня щелепа
-  const [showMandible, setShowMandible] = useState<boolean>(true); // Нижня щелепа
-  const [showGingiva, setShowGingiva] = useState<boolean>(false); // Ясна
-  const [showNerves, setShowNerves] = useState<boolean>(true); // Нерви
-  const [showPlexus, setShowPlexus] = useState<boolean>(true); // Крилоподібне сплетення
-  const [showNeedle, setShowNeedle] = useState<boolean>(true); // Шприц і голка
+  const [showMaxilla, setShowMaxilla] = useState<boolean>(true);
+  const [showMandible, setShowMandible] = useState<boolean>(true);
+  const [showGingiva, setShowGingiva] = useState<boolean>(false);
+  const [showNerves, setShowNerves] = useState<boolean>(true);
+  const [showPlexus, setShowPlexus] = useState<boolean>(true);
+  const [showNeedle, setShowNeedle] = useState<boolean>(true);
 
-  // Camera presets
-  const [activePreset, setActivePreset] = useState<string>('injection');
+  // Active Tooth Selection
   const [inspectedTooth, setInspectedTooth] = useState<number>(46);
   const [activeQuadrant, setActiveQuadrant] = useState<'all' | 'Q1' | 'Q2' | 'Q3' | 'Q4'>('Q4');
 
-  // References to meshes for instant interactive state updates
+  // Dynamic 3D Refs
   const boneMeshesRef = useRef<THREE.Mesh[]>([]);
   const maxillaGroupRef = useRef<THREE.Group | null>(null);
   const mandibleGroupRef = useRef<THREE.Group | null>(null);
@@ -279,10 +428,25 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
   const plexusMeshesRef = useRef<THREE.Mesh[]>([]);
   const teethMeshesRef = useRef<Map<number, THREE.Mesh>>(new Map());
   const needleGroupRef = useRef<THREE.Group | null>(null);
+  const depotMeshRef = useRef<THREE.Mesh | null>(null);
+  const targetRingMeshRef = useRef<THREE.Mesh | null>(null);
 
+  // Active technique config
+  const currentTechniqueConfig = useMemo(() => {
+    return TECHNIQUES_3D[activeTechniqueId] || TECHNIQUES_3D.mandibular;
+  }, [activeTechniqueId]);
+
+  // Current inspected tooth details
   const currentToothData = useMemo(() => {
     return ALL_32_TEETH[inspectedTooth] || ALL_32_TEETH[46];
   }, [inspectedTooth]);
+
+  // Sync prop changes
+  useEffect(() => {
+    if (highlightTechnique && TECHNIQUES_3D[highlightTechnique]) {
+      setActiveTechniqueId(highlightTechnique);
+    }
+  }, [highlightTechnique]);
 
   useEffect(() => {
     if (selectedTooth && ALL_32_TEETH[selectedTooth]) {
@@ -306,7 +470,7 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
     cameraRef.current = camera;
-    camera.position.set(0, 14, -28); // Focus on medial mandibular angle / injection area
+    camera.position.set(0, 8, -18);
 
     // 2. RENDERER
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
@@ -323,11 +487,11 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.maxDistance = 100;
-    controls.minDistance = 6;
-    controls.target.set(0, 1.5, -2);
+    controls.minDistance = 5;
+    controls.target.set(-2.5, 1.2, -3.5);
 
     // 4. LIGHTING
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.1);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.15);
     scene.add(ambientLight);
 
     const dirLightFront = new THREE.DirectionalLight(0x38bdf8, 1.8);
@@ -424,7 +588,6 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
             mesh.receiveShadow = true;
             const name = mesh.name.toLowerCase();
 
-            // Teeth meshes: e.g. tooth-46, tooth-11
             if (name.startsWith('tooth-')) {
               const toothNum = parseInt(name.replace('tooth-', ''), 10);
               mesh.userData = { toothNumber: toothNum };
@@ -447,20 +610,14 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
               } else {
                 mandibleGroup.add(mesh.clone());
               }
-            } 
-            // Gums
-            else if (name.includes('gingiva')) {
+            } else if (name.includes('gingiva')) {
               mesh.material = gingivaMat;
               gingivaGroup.add(mesh.clone());
-            } 
-            // Upper Jaw (Maxilla & Sinus)
-            else if (name.includes('maxilla') || name.includes('sinus')) {
+            } else if (name.includes('maxilla') || name.includes('sinus')) {
               mesh.material = isXRay ? boneMatXRay : boneMatSolid;
               boneMeshesRef.current.push(mesh);
               maxillaGroup.add(mesh.clone());
-            } 
-            // Lower Jaw (Mandible body, alveolar process, condyles)
-            else if (name.includes('mandib')) {
+            } else if (name.includes('mandib')) {
               mesh.material = isXRay ? boneMatXRay : boneMatSolid;
               boneMeshesRef.current.push(mesh);
               mandibleGroup.add(mesh.clone());
@@ -468,7 +625,7 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
           }
         });
 
-        // LOAD NEUROVASCULAR.GLB (Real Trigeminal Nerves, Plexus, Vessels)
+        // LOAD NEUROVASCULAR.GLB
         loader.load(
           neuroUrl,
           (neuroGltf) => {
@@ -520,7 +677,7 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
       }
     );
 
-    // 7. INJECTION SYRINGE & NEEDLE (3D Carpuled Syringe)
+    // 7. 3D CARPULED SURGICAL SYRINGE & NEEDLE
     const needleGroup = new THREE.Group();
     needleGroupRef.current = needleGroup;
     scene.add(needleGroup);
@@ -542,7 +699,7 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
     const needleMesh = new THREE.Mesh(needleGeom, needleMat);
     needleMesh.position.y = 9.5;
 
-    // Deposition Liquid Depot Bloom at foramen mandibulare
+    // Deposition Liquid Depot Bloom at Target Landmark
     const depotGeom = new THREE.SphereGeometry(1.6, 16, 16);
     const depotMat = new THREE.MeshPhysicalMaterial({
       color: 0x06b6d4,
@@ -552,16 +709,26 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
       transmission: 0.8
     });
     const depotMesh = new THREE.Mesh(depotGeom, depotMat);
-    depotMesh.position.set(-3.2, 1.8, -4.2);
-    needleGroup.add(depotMesh);
+    depotMeshRef.current = depotMesh;
+    scene.add(depotMesh);
+
+    // Glowing Target Ring Bullseye at Entry
+    const targetRingGeom = new THREE.TorusGeometry(0.8, 0.12, 12, 24);
+    const targetRingMat = new THREE.MeshBasicMaterial({ color: 0x22d3ee });
+    const targetRing = new THREE.Mesh(targetRingGeom, targetRingMat);
+    targetRingMeshRef.current = targetRing;
+    scene.add(targetRing);
 
     needleGroup.add(barrelMesh);
     needleGroup.add(needleMesh);
 
-    // Syringe Vector coming from opposite premolars (2.2, -1.0, 1.5) to right foramen mandibulare (-3.2, 1.8, -4.2)
-    needleGroup.position.set(2.4, -0.8, 1.2);
-    needleGroup.lookAt(-3.2, 1.8, -4.2);
+    // Position according to active technique
+    const initCfg = TECHNIQUES_3D[activeTechniqueId] || TECHNIQUES_3D.mandibular;
+    needleGroup.position.set(initCfg.syringeOrigin.x, initCfg.syringeOrigin.y, initCfg.syringeOrigin.z);
+    needleGroup.lookAt(initCfg.targetPos.x, initCfg.targetPos.y, initCfg.targetPos.z);
     needleGroup.rotateX(Math.PI / 2);
+    depotMesh.position.set(initCfg.targetPos.x, initCfg.targetPos.y, initCfg.targetPos.z);
+    targetRing.position.set(initCfg.targetPos.x, initCfg.targetPos.y, initCfg.targetPos.z);
 
     // 8. RAYCASTER FOR DIRECT 3D TEETH CLICKING
     const raycaster = new THREE.Raycaster();
@@ -607,9 +774,12 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
       controls.update();
 
       const time = clock.getElapsedTime();
-      if (depotMesh) {
-        const scale = 1 + Math.sin(time * 3) * 0.1;
-        depotMesh.scale.set(scale, scale, scale);
+      if (depotMeshRef.current) {
+        const scale = 1 + Math.sin(time * 3) * 0.12;
+        depotMeshRef.current.scale.set(scale, scale, scale);
+      }
+      if (targetRingMeshRef.current) {
+        targetRingMeshRef.current.rotation.z += 0.02;
       }
 
       renderer.render(scene, camera);
@@ -636,6 +806,30 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
       }
     };
   }, []);
+
+  // Update Injection Needle & Target on Technique Change
+  useEffect(() => {
+    const cfg = TECHNIQUES_3D[activeTechniqueId] || TECHNIQUES_3D.mandibular;
+    if (needleGroupRef.current) {
+      needleGroupRef.current.position.set(cfg.syringeOrigin.x, cfg.syringeOrigin.y, cfg.syringeOrigin.z);
+      needleGroupRef.current.lookAt(cfg.targetPos.x, cfg.targetPos.y, cfg.targetPos.z);
+      needleGroupRef.current.rotateX(Math.PI / 2);
+    }
+    if (depotMeshRef.current) {
+      depotMeshRef.current.position.set(cfg.targetPos.x, cfg.targetPos.y, cfg.targetPos.z);
+    }
+    if (targetRingMeshRef.current) {
+      targetRingMeshRef.current.position.set(cfg.targetPos.x, cfg.targetPos.y, cfg.targetPos.z);
+      targetRingMeshRef.current.lookAt(cfg.syringeOrigin.x, cfg.syringeOrigin.y, cfg.syringeOrigin.z);
+    }
+
+    // Smoothly focus camera on the specific injection site
+    if (cameraRef.current && controlsRef.current) {
+      cameraRef.current.position.set(...cfg.cameraPos);
+      controlsRef.current.target.set(...cfg.cameraTarget);
+      controlsRef.current.update();
+    }
+  }, [activeTechniqueId]);
 
   // Update Materials when X-Ray is toggled
   useEffect(() => {
@@ -668,6 +862,8 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
     if (gingivaGroupRef.current) gingivaGroupRef.current.visible = showGingiva;
     if (neuroGroupRef.current) neuroGroupRef.current.visible = showNerves;
     if (needleGroupRef.current) needleGroupRef.current.visible = showNeedle;
+    if (depotMeshRef.current) depotMeshRef.current.visible = showNeedle;
+    if (targetRingMeshRef.current) targetRingMeshRef.current.visible = showNeedle;
     plexusMeshesRef.current.forEach(m => m.visible = showPlexus);
   }, [showMaxilla, showMandible, showGingiva, showNerves, showPlexus, showNeedle]);
 
@@ -686,31 +882,46 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
     });
   }, [inspectedTooth]);
 
-  // Camera Presets
-  const applyCameraPreset = (preset: 'injection' | 'occlusal' | 'lateral' | 'front' | 'full') => {
-    if (!cameraRef.current || !controlsRef.current) return;
-    setActivePreset(preset);
+  // Handle Fullscreen Resize
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!containerRef.current || !rendererRef.current || !cameraRef.current) return;
+      const w = containerRef.current.clientWidth;
+      const h = containerRef.current.clientHeight || (isFullscreen ? window.innerHeight : 420);
+      cameraRef.current.aspect = w / h;
+      cameraRef.current.updateProjectionMatrix();
+      rendererRef.current.setSize(w, h);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [isFullscreen]);
 
-    if (preset === 'injection') {
-      cameraRef.current.position.set(0, 14, -28);
-      controlsRef.current.target.set(0, 1.5, -2);
-    } else if (preset === 'occlusal') {
-      cameraRef.current.position.set(0, 38, 2);
-      controlsRef.current.target.set(0, 0, 0);
-    } else if (preset === 'lateral') {
-      cameraRef.current.position.set(34, 4, -5);
-      controlsRef.current.target.set(0, 0, -2);
-    } else if (preset === 'front') {
-      cameraRef.current.position.set(0, 6, 34);
-      controlsRef.current.target.set(0, 0, 2);
-    } else if (preset === 'full') {
-      cameraRef.current.position.set(24, 22, 26);
-      controlsRef.current.target.set(0, 0, 0);
-    }
+  // Convenient Mobile Navigation Controls
+  const handleZoom = (factor: number) => {
+    if (!cameraRef.current || !controlsRef.current) return;
+    cameraRef.current.position.multiplyScalar(factor);
     controlsRef.current.update();
   };
 
-  // Filtered teeth for the selector bar
+  const handleRotate90 = () => {
+    if (!cameraRef.current || !controlsRef.current) return;
+    const pos = cameraRef.current.position;
+    const x = pos.x;
+    const z = pos.z;
+    pos.x = -z;
+    pos.z = x;
+    controlsRef.current.update();
+  };
+
+  const handleResetCamera = () => {
+    const cfg = currentTechniqueConfig;
+    if (cameraRef.current && controlsRef.current) {
+      cameraRef.current.position.set(...cfg.cameraPos);
+      controlsRef.current.target.set(...cfg.cameraTarget);
+      controlsRef.current.update();
+    }
+  };
+
+  // Filtered teeth for the selector ribbon
   const displayedTeeth = useMemo(() => {
     return Object.values(ALL_32_TEETH).filter(t => {
       if (activeQuadrant === 'all') return true;
@@ -720,14 +931,18 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
   }, [activeQuadrant]);
 
   return (
-    <div className="relative bg-[#060E20] border border-cyan-800/40 rounded-2xl overflow-hidden shadow-2xl">
+    <div className={`relative bg-[#060E20] border border-cyan-800/40 rounded-2xl overflow-hidden shadow-2xl transition-all ${
+      isFullscreen ? 'fixed inset-0 z-50 w-screen h-screen rounded-none border-none flex flex-col' : ''
+    }`}>
       {/* 3D Top Header Bar */}
-      <div className="flex items-center justify-between px-3 py-2 bg-[#0B1326]/90 border-b border-slate-800 text-xs font-mono">
+      <div className="flex items-center justify-between px-3 py-2 bg-[#0B1326]/95 border-b border-slate-800 text-xs font-mono shrink-0">
         <div className="flex items-center gap-2 text-cyan-400">
           <Rotate3d className="w-4 h-4 animate-spin-slow" />
-          <span className="font-bold">ПОВНА АНАТОМІЧНА 3D ЩЕЛЕПА</span>
+          <span className="font-bold">ПОВНА 3D ЩЕЛЕПА ТА ВКОЛ</span>
         </div>
+
         <div className="flex items-center gap-1.5">
+          {/* X-Ray Switch */}
           <button
             onClick={() => setIsXRay(!isXRay)}
             className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all border ${
@@ -737,22 +952,63 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
             }`}
           >
             <Zap className="w-3 h-3 text-cyan-400" />
-            X-Ray Рентген: {isXRay ? 'ON' : 'OFF'}
+            X-Ray: {isXRay ? 'ON' : 'OFF'}
+          </button>
+
+          {/* Fullscreen Button */}
+          <button
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className={`p-1.5 rounded-lg border transition-all ${
+              isFullscreen
+                ? 'bg-rose-500/20 text-rose-300 border-rose-500/50'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+            }`}
+            title={isFullscreen ? 'Вийти з повного екрана' : 'На весь екран на телефоні'}
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
         </div>
+      </div>
+
+      {/* Technique Selector Ribbon (Changes 3D Needle Trajectory dynamically!) */}
+      <div className="px-2 py-1.5 bg-[#091329] border-b border-slate-800 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0">
+        <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold pl-1 flex items-center gap-1 shrink-0">
+          <Syringe className="w-3.5 h-3.5" /> Вкол:
+        </span>
+        {Object.values(TECHNIQUES_3D).map(tech => {
+          const isSelected = tech.id === activeTechniqueId;
+          return (
+            <button
+              key={tech.id}
+              onClick={() => {
+                setActiveTechniqueId(tech.id);
+                if (onSelectTechnique) onSelectTechnique(tech);
+              }}
+              className={`px-2.5 py-1 rounded-xl text-xs whitespace-nowrap font-bold transition-all border shrink-0 ${
+                isSelected
+                  ? 'bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 border-cyan-300 shadow-md shadow-cyan-500/20'
+                  : 'bg-[#0E1A38] text-slate-300 border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              {tech.shortTitle}
+            </button>
+          );
+        })}
       </div>
 
       {/* 3D WebGL Canvas Container */}
       <div
         ref={containerRef}
-        className="relative w-full h-[400px] cursor-grab active:cursor-grabbing select-none touch-none bg-[#070D1B]"
+        className={`relative w-full cursor-grab active:cursor-grabbing select-none touch-none bg-[#070D1B] ${
+          isFullscreen ? 'flex-1 h-full' : 'h-[380px]'
+        }`}
       >
         {/* Loading Overlay */}
         {isLoading && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#060E20]/90 backdrop-blur-md">
             <div className="w-12 h-12 border-3 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin mb-3"></div>
             <p className="text-xs font-bold text-slate-200">
-              Завантаження повної 3D-моделі щелепи...
+              Завантаження 3D-моделі щелепи...
             </p>
             <div className="w-48 bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
               <div 
@@ -771,156 +1027,157 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
           </div>
         )}
 
-        {/* Anatomical Layer Controls (Left Floating HUD) */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1 z-10 pointer-events-auto">
-          <span className="text-[9px] font-mono uppercase text-slate-400 px-1">
-            Анатомічні шари:
-          </span>
-          <button
-            onClick={() => setShowMaxilla(!showMaxilla)}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono border backdrop-blur-md flex items-center justify-between gap-1.5 transition-all ${
-              showMaxilla
-                ? 'bg-slate-900/90 text-cyan-300 border-cyan-500/40'
-                : 'bg-slate-950/70 text-slate-500 border-slate-800'
-            }`}
-          >
-            <span>Верхня щелепа (Maxilla)</span>
-            {showMaxilla ? <Eye className="w-3 h-3 text-cyan-400" /> : <EyeOff className="w-3 h-3 text-slate-600" />}
-          </button>
+        {/* Floating Technique Target Badge */}
+        <div className="absolute top-3 left-3 z-10 pointer-events-none max-w-[70%]">
+          <div className="bg-[#0B1326]/90 backdrop-blur-md p-2 rounded-xl border border-cyan-500/40 shadow-lg space-y-0.5">
+            <div className="flex items-center gap-1.5 text-cyan-300 font-bold text-xs">
+              <Crosshair className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+              <span>{currentTechniqueConfig.title}</span>
+            </div>
+            <p className="text-[10px] text-slate-300 font-mono leading-tight">
+              Ціль: {currentTechniqueConfig.targetName}
+            </p>
+          </div>
+        </div>
 
+        {/* Convenient Mobile Navigation Controls (Bottom Right Floating) */}
+        <div className="absolute bottom-3 right-3 flex flex-col gap-1.5 z-10 pointer-events-auto">
           <button
-            onClick={() => setShowMandible(!showMandible)}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono border backdrop-blur-md flex items-center justify-between gap-1.5 transition-all ${
-              showMandible
-                ? 'bg-slate-900/90 text-cyan-300 border-cyan-500/40'
-                : 'bg-slate-950/70 text-slate-500 border-slate-800'
-            }`}
+            onClick={() => handleZoom(0.85)}
+            className="w-8 h-8 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+            title="Наблизити (+)"
           >
-            <span>Нижня щелепа (Mandibula)</span>
-            {showMandible ? <Eye className="w-3 h-3 text-cyan-400" /> : <EyeOff className="w-3 h-3 text-slate-600" />}
+            <ZoomIn className="w-4 h-4 text-cyan-400" />
           </button>
-
           <button
-            onClick={() => setShowNerves(!showNerves)}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono border backdrop-blur-md flex items-center justify-between gap-1.5 transition-all ${
-              showNerves
-                ? 'bg-amber-950/70 text-amber-300 border-amber-500/50'
-                : 'bg-slate-950/70 text-slate-500 border-slate-800'
-            }`}
+            onClick={() => handleZoom(1.15)}
+            className="w-8 h-8 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+            title="Віддалити (-)"
           >
-            <span>Нерви (V3 & V2)</span>
-            {showNerves ? <Eye className="w-3 h-3 text-amber-400" /> : <EyeOff className="w-3 h-3 text-slate-600" />}
+            <ZoomOut className="w-4 h-4 text-slate-300" />
           </button>
-
           <button
-            onClick={() => setShowPlexus(!showPlexus)}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono border backdrop-blur-md flex items-center justify-between gap-1.5 transition-all ${
-              showPlexus
-                ? 'bg-blue-950/70 text-blue-300 border-blue-500/50'
-                : 'bg-slate-950/70 text-slate-500 border-slate-800'
-            }`}
+            onClick={handleRotate90}
+            className="w-8 h-8 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+            title="Повернути на 90°"
           >
-            <span>Крилоподібне сплетення</span>
-            {showPlexus ? <Eye className="w-3 h-3 text-blue-400" /> : <EyeOff className="w-3 h-3 text-slate-600" />}
+            <Compass className="w-4 h-4 text-teal-400" />
           </button>
-
           <button
-            onClick={() => setShowGingiva(!showGingiva)}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono border backdrop-blur-md flex items-center justify-between gap-1.5 transition-all ${
-              showGingiva
-                ? 'bg-rose-950/70 text-rose-300 border-rose-500/50'
-                : 'bg-slate-950/70 text-slate-500 border-slate-800'
-            }`}
+            onClick={handleResetCamera}
+            className="w-8 h-8 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+            title="Скинути ракурс"
           >
-            <span>Ясна (Gingiva)</span>
-            {showGingiva ? <Eye className="w-3 h-3 text-rose-400" /> : <EyeOff className="w-3 h-3 text-slate-600" />}
-          </button>
-
-          <button
-            onClick={() => setShowNeedle(!showNeedle)}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono border backdrop-blur-md flex items-center justify-between gap-1.5 transition-all ${
-              showNeedle
-                ? 'bg-cyan-950/70 text-cyan-300 border-cyan-500/50'
-                : 'bg-slate-950/70 text-slate-500 border-slate-800'
-            }`}
-          >
-            <span>Шприц & Голка (Вкол)</span>
-            {showNeedle ? <Eye className="w-3 h-3 text-cyan-400" /> : <EyeOff className="w-3 h-3 text-slate-600" />}
+            <RotateCcw className="w-4 h-4 text-amber-400" />
           </button>
         </div>
 
-        {/* Camera Angles Presets (Right Floating HUD) */}
-        <div className="absolute top-3 right-3 flex flex-col gap-1 z-10 pointer-events-auto">
-          <span className="text-[9px] font-mono uppercase text-slate-400 text-right px-1">
-            Ракурс:
-          </span>
+        {/* Toggleable Anatomical Layers Button (Top Right Floating) */}
+        <div className="absolute top-3 right-3 z-10 pointer-events-auto flex flex-col items-end gap-1">
           <button
-            onClick={() => applyCameraPreset('injection')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono border backdrop-blur-md text-right transition-all ${
-              activePreset === 'injection'
-                ? 'bg-cyan-500 text-slate-950 font-bold border-cyan-400'
-                : 'bg-slate-900/80 text-slate-300 border-slate-700 hover:border-slate-600'
+            onClick={() => setShowLayersDrawer(!showLayersDrawer)}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold border backdrop-blur-md flex items-center gap-1.5 transition-all ${
+              showLayersDrawer
+                ? 'bg-cyan-500 text-slate-950 border-cyan-300 shadow'
+                : 'bg-[#0B1326]/90 text-slate-300 border-slate-700'
             }`}
           >
-            🎯 Вкол (Мандибулярна)
+            <Sliders className="w-3.5 h-3.5" />
+            <span>Шари</span>
           </button>
-          <button
-            onClick={() => applyCameraPreset('occlusal')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono border backdrop-blur-md text-right transition-all ${
-              activePreset === 'occlusal'
-                ? 'bg-cyan-500 text-slate-950 font-bold border-cyan-400'
-                : 'bg-slate-900/80 text-slate-300 border-slate-700 hover:border-slate-600'
-            }`}
-          >
-            🦷 Оклюзія (Прикус)
-          </button>
-          <button
-            onClick={() => applyCameraPreset('lateral')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono border backdrop-blur-md text-right transition-all ${
-              activePreset === 'lateral'
-                ? 'bg-cyan-500 text-slate-950 font-bold border-cyan-400'
-                : 'bg-slate-900/80 text-slate-300 border-slate-700 hover:border-slate-600'
-            }`}
-          >
-            📐 Гілка (Рамус)
-          </button>
-          <button
-            onClick={() => applyCameraPreset('front')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono border backdrop-blur-md text-right transition-all ${
-              activePreset === 'front'
-                ? 'bg-cyan-500 text-slate-950 font-bold border-cyan-400'
-                : 'bg-slate-900/80 text-slate-300 border-slate-700 hover:border-slate-600'
-            }`}
-          >
-            👤 Ментальний отвір
-          </button>
-          <button
-            onClick={() => applyCameraPreset('full')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono border backdrop-blur-md text-right transition-all ${
-              activePreset === 'full'
-                ? 'bg-cyan-500 text-slate-950 font-bold border-cyan-400'
-                : 'bg-slate-900/80 text-slate-300 border-slate-700 hover:border-slate-600'
-            }`}
-          >
-            🔄 Загальний 3D
-          </button>
+
+          {/* Collapsible Layers Dropdown */}
+          {showLayersDrawer && (
+            <div className="bg-[#0B1326]/95 backdrop-blur-xl p-2.5 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-1 w-52 mt-1">
+              <span className="text-[9px] font-mono uppercase text-slate-400 px-1 font-bold">
+                Анатомічні шари 3D:
+              </span>
+              <button
+                onClick={() => setShowMaxilla(!showMaxilla)}
+                className="px-2 py-1 rounded-lg text-[10px] font-mono border bg-slate-900/80 text-slate-200 border-slate-700 flex items-center justify-between"
+              >
+                <span>Верхня щелепа</span>
+                {showMaxilla ? <Eye className="w-3 h-3 text-cyan-400" /> : <EyeOff className="w-3 h-3 text-slate-600" />}
+              </button>
+              <button
+                onClick={() => setShowMandible(!showMandible)}
+                className="px-2 py-1 rounded-lg text-[10px] font-mono border bg-slate-900/80 text-slate-200 border-slate-700 flex items-center justify-between"
+              >
+                <span>Нижня щелепа</span>
+                {showMandible ? <Eye className="w-3 h-3 text-cyan-400" /> : <EyeOff className="w-3 h-3 text-slate-600" />}
+              </button>
+              <button
+                onClick={() => setShowNerves(!showNerves)}
+                className="px-2 py-1 rounded-lg text-[10px] font-mono border bg-slate-900/80 text-amber-300 border-slate-700 flex items-center justify-between"
+              >
+                <span>Нерви (V3 & V2)</span>
+                {showNerves ? <Eye className="w-3 h-3 text-amber-400" /> : <EyeOff className="w-3 h-3 text-slate-600" />}
+              </button>
+              <button
+                onClick={() => setShowPlexus(!showPlexus)}
+                className="px-2 py-1 rounded-lg text-[10px] font-mono border bg-slate-900/80 text-blue-300 border-slate-700 flex items-center justify-between"
+              >
+                <span>Венозне сплетення</span>
+                {showPlexus ? <Eye className="w-3 h-3 text-blue-400" /> : <EyeOff className="w-3 h-3 text-slate-600" />}
+              </button>
+              <button
+                onClick={() => setShowGingiva(!showGingiva)}
+                className="px-2 py-1 rounded-lg text-[10px] font-mono border bg-slate-900/80 text-rose-300 border-slate-700 flex items-center justify-between"
+              >
+                <span>Ясна (Gingiva)</span>
+                {showGingiva ? <Eye className="w-3 h-3 text-rose-400" /> : <EyeOff className="w-3 h-3 text-slate-600" />}
+              </button>
+              <button
+                onClick={() => setShowNeedle(!showNeedle)}
+                className="px-2 py-1 rounded-lg text-[10px] font-mono border bg-slate-900/80 text-cyan-300 border-slate-700 flex items-center justify-between"
+              >
+                <span>Шприц & Голка</span>
+                {showNeedle ? <Eye className="w-3 h-3 text-cyan-400" /> : <EyeOff className="w-3 h-3 text-slate-600" />}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Bottom Hint */}
-        <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between text-[10px] font-mono text-slate-400 pointer-events-none">
+        <div className="absolute bottom-2 left-3 flex items-center text-[10px] font-mono text-slate-400 pointer-events-none">
           <span className="bg-slate-900/85 backdrop-blur px-2 py-0.5 rounded border border-slate-800">
-            Обертайте 1 пальцем • Зум 2 пальцями • Клік по зубу
+            Обертайте 1 пальцем • Клік по зубу для інфо
           </span>
-          <span className="bg-cyan-950/90 text-cyan-300 backdrop-blur px-2 py-0.5 rounded border border-cyan-800 font-bold">
-            Анатомічний скан (DBCLS)
+        </div>
+      </div>
+
+      {/* Selected Technique Details Bar */}
+      <div className="p-3 bg-[#0B1326] border-t border-slate-800 space-y-2 text-xs shrink-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+          <div className="p-2 rounded-xl bg-[#070D1B] border border-slate-800/80">
+            <span className="text-cyan-400 font-bold block mb-0.5">Анатомічні орієнтири вколу:</span>
+            <span className="text-slate-300 leading-relaxed">
+              {currentTechniqueConfig.landmarks}
+            </span>
+          </div>
+
+          <div className="p-2 rounded-xl bg-[#070D1B] border border-slate-800/80">
+            <span className="text-teal-400 font-bold block mb-0.5">Положення циліндра та кут:</span>
+            <span className="text-slate-300 leading-relaxed">
+              {currentTechniqueConfig.needleAngle}
+            </span>
+          </div>
+        </div>
+
+        <div className="p-2 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-[11px] flex items-center justify-between">
+          <span className="text-slate-300">
+            Глибина: <strong className="text-cyan-300 font-mono">{currentTechniqueConfig.depth}</strong>
+          </span>
+          <span className="text-slate-400 text-right">
+            Зона: <strong className="text-slate-200">{currentTechniqueConfig.numbness}</strong>
           </span>
         </div>
       </div>
 
       {/* 32 Teeth Quadrant Navigation Tabs */}
-      <div className="p-2 bg-[#081124] border-t border-slate-800 flex items-center justify-between gap-1 text-xs">
-        <span className="text-[10px] font-mono uppercase text-slate-400">
-          Квадранти зубів:
+      <div className="p-2 bg-[#081124] border-t border-slate-800 flex items-center justify-between gap-1 text-xs shrink-0">
+        <span className="text-[10px] font-mono uppercase text-slate-400 font-bold">
+          Зуби (FDI):
         </span>
         <div className="flex gap-1">
           <button
@@ -967,7 +1224,7 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
       </div>
 
       {/* Horizontal Tooth Selector Ribbon */}
-      <div className="px-3 py-1.5 bg-[#070D1B] border-t border-slate-800/80 overflow-x-auto scrollbar-none">
+      <div className="px-3 py-1.5 bg-[#070D1B] border-t border-slate-800/80 overflow-x-auto scrollbar-none shrink-0">
         <div className="flex items-center gap-1.5 min-w-max">
           {displayedTeeth.map(t => {
             const isSelected = t.num === inspectedTooth;
@@ -991,7 +1248,7 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
       </div>
 
       {/* Selected Tooth Clinical Diagnostic Card */}
-      <div className="p-3 bg-[#0B1326] border-t border-slate-800 space-y-2 text-xs">
+      <div className="p-3 bg-[#0B1326] border-t border-slate-800 space-y-2 text-xs shrink-0">
         <div className="flex items-start justify-between gap-2">
           <div>
             <div className="flex items-center gap-2">
@@ -1016,7 +1273,6 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
           </span>
         </div>
 
-        {/* Anatomical metrics */}
         <div className="grid grid-cols-2 gap-2 text-[11px]">
           <div className="p-2 rounded-xl bg-[#070D1B] border border-slate-800/80">
             <span className="text-cyan-400 font-bold block mb-0.5">Корені та канали:</span>
@@ -1033,7 +1289,6 @@ export const Mandible3DViewer: React.FC<Mandible3DViewerProps> = ({
           </div>
         </div>
 
-        {/* Clinical anesthesia protocol */}
         <div className="p-2.5 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-[11px]">
           <div className="flex items-center gap-1.5 font-bold text-cyan-300 mb-0.5">
             <ShieldCheck className="w-3.5 h-3.5" />

@@ -244,7 +244,13 @@ export const Trainer2D: React.FC<Trainer2DProps> = ({
       </div>
 
       {viewportMode === '3d' ? (
-        <Mandible3DViewer highlightTechnique={currentTechnique.id} />
+        <Mandible3DViewer 
+          highlightTechnique={currentTechnique.id} 
+          onSelectTechnique={(tech) => {
+            const found = ANESTHESIA_TECHNIQUES.find(t => t.id === tech.id);
+            if (found) onSelectTechnique(found);
+          }}
+        />
       ) : (
         /* Interactive 2D Anatomy Canvas Arena */
         <div className="relative bg-[#060E20] border border-cyan-900/40 rounded-2xl overflow-hidden shadow-2xl">
