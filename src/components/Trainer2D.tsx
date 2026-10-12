@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ANESTHESIA_TECHNIQUES, AnesthesiaTechnique } from '../data/anesthesiaData';
+import { ToothOcclusal } from './AnatomicalTeeth';
 
 interface Trainer2DProps {
   currentTechnique: AnesthesiaTechnique;
@@ -255,47 +256,88 @@ export const Trainer2D: React.FC<Trainer2DProps> = ({
             {/* MANDIBULAR / TORUSAL ANATOMICAL SVG SCHEMATIC */}
             {(currentTechnique.id === 'mandibular' || currentTechnique.id === 'torusal') && (
               <g id="oral-cavity-mandibular">
-                {/* Oral Cavity Border / Palatopharyngeal arch */}
+                {/* Oral Cavity Soft Tissue Walls & Oropharynx */}
                 <path
-                  d="M 15 15 Q 50 5 85 15 Q 92 50 85 85 Q 50 95 15 85 Q 8 50 15 15 Z"
-                  fill="#0E172E"
+                  d="M 10 15 Q 50 2 90 15 Q 96 50 90 86 Q 50 98 10 86 Q 4 50 10 15 Z"
+                  fill="#0B132B"
                   stroke="#1E293B"
                   strokeWidth="0.8"
                 />
 
-                {/* Upper Teeth Arch (silhouette) */}
+                {/* Soft Palate & Uvula (М'яке піднебіння та язичок) */}
                 <path
-                  d="M 22 25 Q 50 16 78 25"
-                  fill="none"
-                  stroke="#334155"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                />
-
-                {/* Lower Teeth Arch & Molars */}
-                <path
-                  d="M 22 75 Q 50 84 78 75"
-                  fill="none"
-                  stroke="#475569"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                />
-                {/* 3 Lower Molars on right (48, 47, 46) */}
-                <rect x="68" y="71" width="4.5" height="4.5" rx="1" fill="#64748B" />
-                <rect x="73" y="69" width="4.5" height="4.5" rx="1" fill="#64748B" />
-                <rect x="78" y="67" width="4.5" height="4.5" rx="1" fill="#64748B" />
-
-                {/* Tongue (Lingua) */}
-                <path
-                  d="M 32 60 Q 50 48 68 60 Q 50 78 32 60 Z"
+                  d="M 28 22 Q 50 28 72 22 Q 62 30 54 28 Q 50 36 46 28 Q 38 30 28 22 Z"
                   fill="#881337"
+                  fillOpacity="0.4"
+                  stroke="#9F1239"
+                  strokeWidth="0.6"
+                />
+                <ellipse cx="50" cy="32" rx="2" ry="3.5" fill="#BE123C" fillOpacity="0.7" stroke="#E11D48" strokeWidth="0.5" />
+                {!examMode && showAnatomyLabels && (
+                  <text x="50" y="38" textAnchor="middle" fill="#FDA4AF" fontSize="2" fontFamily="sans-serif">
+                    Uvula
+                  </text>
+                )}
+
+                {/* Tongue Body (Спинка язика) with anatomical groove */}
+                <path
+                  d="M 30 62 Q 50 48 70 62 Q 65 77 50 79 Q 35 77 30 62 Z"
+                  fill="#9F1239"
                   fillOpacity="0.35"
-                  stroke="#BE123C"
+                  stroke="#E11D48"
                   strokeWidth="0.7"
                 />
+                <line x1="50" y1="55" x2="50" y2="74" stroke="#BE123C" strokeWidth="0.6" strokeDasharray="1,1" />
                 {!examMode && showAnatomyLabels && (
-                  <text x="50" y="64" textAnchor="middle" fill="#FDA4AF" fontSize="2.8" fontFamily="sans-serif">
+                  <text x="50" y="65" textAnchor="middle" fill="#FDA4AF" fontSize="2.6" fontFamily="sans-serif">
                     Язик (N. lingualis)
+                  </text>
+                )}
+
+                {/* REALISTIC UPPER TEETH ROW (Occlusal surfaces of upper dentition) */}
+                <g id="upper-teeth-arch" opacity="0.85">
+                  <ToothOcclusal type="molar_2" cx={82} cy={22} rotation={20} scale={0.8} label="18" />
+                  <ToothOcclusal type="molar_2" cx={76} cy={20} rotation={15} scale={0.85} label="17" />
+                  <ToothOcclusal type="molar_1" cx={70} cy={18} rotation={10} scale={0.9} label="16" />
+                  <ToothOcclusal type="premolar" cx={64} cy={17} rotation={5} scale={0.85} label="15" />
+                  <ToothOcclusal type="premolar" cx={59} cy={16} rotation={0} scale={0.85} label="14" />
+                  <ToothOcclusal type="canine" cx={54} cy={15.5} rotation={-5} scale={0.85} label="13" />
+                  <ToothOcclusal type="incisor" cx={49} cy={15} rotation={-10} scale={0.8} label="11" />
+                  <ToothOcclusal type="incisor" cx={51} cy={15} rotation={10} scale={0.8} label="21" />
+                  <ToothOcclusal type="canine" cx={46} cy={15.5} rotation={5} scale={0.85} label="23" />
+                  <ToothOcclusal type="premolar" cx={41} cy={16} rotation={0} scale={0.85} label="24" />
+                  <ToothOcclusal type="premolar" cx={36} cy={17} rotation={-5} scale={0.85} label="25" />
+                  <ToothOcclusal type="molar_1" cx={30} cy={18} rotation={-10} scale={0.9} label="26" />
+                  <ToothOcclusal type="molar_2" cx={24} cy={20} rotation={-15} scale={0.85} label="27" />
+                  <ToothOcclusal type="molar_2" cx={18} cy={22} rotation={-20} scale={0.8} label="28" />
+                </g>
+
+                {/* REALISTIC LOWER TEETH ARCH WITH DETAILED OCCLUSAL CUSPS */}
+                <g id="lower-teeth-arch">
+                  {/* Right Lower Teeth (Q4: 48, 47, 46, 45, 44, 43, 42, 41) - Target side */}
+                  <ToothOcclusal type="molar_2" cx={82} cy={66} rotation={-20} scale={1.05} isNumb={true} label="48" />
+                  <ToothOcclusal type="molar_2" cx={76} cy={69} rotation={-15} scale={1.1} isNumb={true} label="47" />
+                  <ToothOcclusal type="molar_1" cx={69} cy={72} rotation={-10} scale={1.15} isNumb={true} label="46" />
+                  <ToothOcclusal type="premolar" cx={63} cy={75} rotation={-5} scale={1.0} isNumb={true} label="45" />
+                  <ToothOcclusal type="premolar" cx={57} cy={77} rotation={0} scale={1.0} isNumb={true} label="44" />
+                  <ToothOcclusal type="canine" cx={51} cy={79} rotation={5} scale={1.0} isNumb={true} label="43" />
+                  <ToothOcclusal type="incisor" cx={46} cy={80} rotation={10} scale={0.9} isNumb={true} label="42" />
+                  <ToothOcclusal type="incisor" cx={42} cy={80.5} rotation={15} scale={0.9} isNumb={true} label="41" />
+
+                  {/* Left Lower Teeth (Q3: 31, 32, 33, 34, 35, 36) - Syringe Rest side */}
+                  <ToothOcclusal type="incisor" cx={38} cy={80.5} rotation={-15} scale={0.9} label="31" />
+                  <ToothOcclusal type="incisor" cx={34} cy={80} rotation={-10} scale={0.9} label="32" />
+                  <ToothOcclusal type="canine" cx={29} cy={79} rotation={-5} scale={1.0} label="33" />
+                  {/* Syringe rest position on premolars 34, 35 */}
+                  <ToothOcclusal type="premolar" cx={23} cy={76} rotation={5} scale={1.05} label="34" />
+                  <ToothOcclusal type="premolar" cx={17} cy={73} rotation={10} scale={1.05} label="35" />
+                  <ToothOcclusal type="molar_1" cx={11} cy={70} rotation={15} scale={1.0} label="36" />
+                </g>
+
+                {/* Syringe rest marker text on opposite premolars */}
+                {!examMode && showAnatomyLabels && (
+                  <text x="21" y="84" textAnchor="middle" fill="#22D3EE" fontSize="2.2" fontFamily="monospace">
+                    Опора шприца (34-35)
                   </text>
                 )}
 
@@ -303,38 +345,38 @@ export const Trainer2D: React.FC<Trainer2DProps> = ({
                 {!examMode && (
                   <g>
                     <line
-                      x1="18"
+                      x1="12"
                       y1="58"
-                      x2="85"
+                      x2="88"
                       y2="58"
                       stroke="#06B6D4"
                       strokeWidth="0.5"
                       strokeDasharray="1.5,1.5"
-                      strokeOpacity="0.7"
+                      strokeOpacity="0.8"
                     />
-                    <text x="84" y="56.5" textAnchor="end" fill="#38BDF8" fontSize="2.4" fontFamily="monospace">
-                      +10 мм над жувальною поверхнею
+                    <text x="86" y="56" textAnchor="end" fill="#38BDF8" fontSize="2.4" fontFamily="monospace" fontWeight="bold">
+                      +10 мм (рівень вколу над 46, 47, 48)
                     </text>
                   </g>
                 )}
 
                 {/* Danger Zone: Parotid Gland / Facial Nerve (Distal/Deep) */}
                 <path
-                  d="M 78 25 Q 92 35 90 60 Q 82 55 78 40 Z"
+                  d="M 82 24 Q 94 36 92 62 Q 84 56 80 40 Z"
                   fill="url(#dangerGlow)"
                   stroke="#EF4444"
                   strokeWidth="0.6"
                   strokeDasharray="1,1"
                 />
                 {!examMode && showAnatomyLabels && (
-                  <text x="86" y="38" fill="#F87171" fontSize="2.2" fontFamily="sans-serif" textAnchor="middle">
+                  <text x="87" y="38" fill="#F87171" fontSize="2.2" fontFamily="sans-serif" textAnchor="middle">
                     Зона ризику: N. facialis
                   </text>
                 )}
 
                 {/* Danger Zone: Medial Pterygoid Muscle (Medial) */}
                 <path
-                  d="M 50 35 Q 56 45 54 65 Q 46 58 48 40 Z"
+                  d="M 48 35 Q 56 46 53 66 Q 44 58 46 40 Z"
                   fill="#B45309"
                   fillOpacity="0.25"
                   stroke="#D97706"
@@ -342,21 +384,21 @@ export const Trainer2D: React.FC<Trainer2DProps> = ({
                   strokeDasharray="1,1"
                 />
                 {!examMode && showAnatomyLabels && (
-                  <text x="46" y="48" fill="#FBBF24" fontSize="2.2" fontFamily="sans-serif" textAnchor="middle">
+                  <text x="45" y="48" fill="#FBBF24" fontSize="2.2" fontFamily="sans-serif" textAnchor="middle">
                     M. pterygoideus medialis
                   </text>
                 )}
 
                 {/* Plica pterygomandibularis (Криловидно-щелепна складка) */}
                 <path
-                  d="M 58 28 Q 63 45 61 68"
+                  d="M 58 26 Q 64 45 61 68"
                   fill="none"
                   stroke={examMode ? '#334155' : '#38BDF8'}
-                  strokeWidth="1.8"
+                  strokeWidth="2"
                   strokeDasharray={examMode ? 'none' : '2,1'}
                 />
                 {!examMode && showAnatomyLabels && (
-                  <text x="58" y="26" fill="#7DD3FC" fontSize="2.6" fontWeight="bold">
+                  <text x="58" y="24" fill="#7DD3FC" fontSize="2.6" fontWeight="bold">
                     Plica pterygomandibularis
                   </text>
                 )}
@@ -368,9 +410,9 @@ export const Trainer2D: React.FC<Trainer2DProps> = ({
                   rx="4.5"
                   ry="3.5"
                   fill="#0284C7"
-                  fillOpacity="0.25"
+                  fillOpacity="0.3"
                   stroke="#0284C7"
-                  strokeWidth="0.6"
+                  strokeWidth="0.7"
                 />
                 {!examMode && showAnatomyLabels && (
                   <text x="75" y="66" fill="#38BDF8" fontSize="2.3">
@@ -380,15 +422,20 @@ export const Trainer2D: React.FC<Trainer2DProps> = ({
 
                 {/* Torus mandibulae (для торусальної) */}
                 {currentTechnique.id === 'torusal' && (
-                  <circle
-                    cx="68"
-                    cy="35"
-                    r="4"
-                    fill="#14B8A6"
-                    fillOpacity="0.3"
-                    stroke="#14B8A6"
-                    strokeWidth="0.8"
-                  />
+                  <g>
+                    <circle
+                      cx="68"
+                      cy="35"
+                      r="4.2"
+                      fill="#14B8A6"
+                      fillOpacity="0.35"
+                      stroke="#14B8A6"
+                      strokeWidth="0.9"
+                    />
+                    <text x="68" y="32" textAnchor="middle" fill="#5EEAD4" fontSize="2.2" fontWeight="bold">
+                      Torus mandibulae
+                    </text>
+                  </g>
                 )}
               </g>
             )}
@@ -398,45 +445,57 @@ export const Trainer2D: React.FC<Trainer2DProps> = ({
               <g id="upper-jaw-schematic">
                 {/* Maxillary / Palatal Arch */}
                 <path
-                  d="M 18 80 Q 50 15 82 80"
+                  d="M 12 85 C 10 35, 25 15, 50 15 C 75 15, 90 35, 88 85"
                   fill="#0E172E"
                   stroke="#1E293B"
                   strokeWidth="1.2"
                 />
 
-                {/* Dental arch teeth row */}
-                <path
-                  d="M 22 76 Q 50 22 78 76"
-                  fill="none"
-                  stroke="#475569"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                />
-
                 {/* Midline suture (Sutura palatina mediana) */}
-                <line x1="50" y1="26" x2="50" y2="76" stroke="#334155" strokeWidth="0.8" strokeDasharray="1,1" />
+                <line x1="50" y1="24" x2="50" y2="82" stroke="#334155" strokeWidth="0.8" strokeDasharray="1,1" />
+
+                {/* REALISTIC UPPER OCCLUSAL TEETH */}
+                <g id="upper-arch-occlusal">
+                  <ToothOcclusal type="molar_2" cx={82} cy={80} rotation={-10} scale={1.05} isNumb={currentTechnique.id === 'tuberal'} label="18" />
+                  <ToothOcclusal type="molar_2" cx={80} cy={68} rotation={-15} scale={1.1} isNumb={currentTechnique.id === 'tuberal'} label="17" />
+                  <ToothOcclusal type="molar_1" cx={78} cy={56} rotation={-20} scale={1.15} isNumb={currentTechnique.id === 'tuberal'} label="16" />
+                  <ToothOcclusal type="premolar" cx={73} cy={44} rotation={-30} scale={1.0} isNumb={currentTechnique.id === 'infraorbital'} label="15" />
+                  <ToothOcclusal type="premolar" cx={67} cy={34} rotation={-45} scale={1.0} isNumb={currentTechnique.id === 'infraorbital'} label="14" />
+                  <ToothOcclusal type="canine" cx={60} cy={25} rotation={-60} scale={1.0} isNumb={currentTechnique.id === 'infraorbital'} label="13" />
+                  <ToothOcclusal type="incisor" cx={54} cy={19} rotation={-75} scale={0.95} isNumb={currentTechnique.id === 'infraorbital'} label="12" />
+                  <ToothOcclusal type="incisor" cx={48} cy={17} rotation={-85} scale={0.95} isNumb={currentTechnique.id === 'infraorbital'} label="11" />
+
+                  <ToothOcclusal type="incisor" cx={52} cy={17} rotation={85} scale={0.95} label="21" />
+                  <ToothOcclusal type="incisor" cx={46} cy={19} rotation={75} scale={0.95} label="22" />
+                  <ToothOcclusal type="canine" cx={40} cy={25} rotation={60} scale={1.0} label="23" />
+                  <ToothOcclusal type="premolar" cx={33} cy={34} rotation={45} scale={1.0} label="24" />
+                  <ToothOcclusal type="premolar" cx={27} cy={44} rotation={30} scale={1.0} label="25" />
+                  <ToothOcclusal type="molar_1" cx={22} cy={56} rotation={20} scale={1.15} label="26" />
+                  <ToothOcclusal type="molar_2" cx={20} cy={68} rotation={15} scale={1.1} label="27" />
+                  <ToothOcclusal type="molar_2" cx={18} cy={80} rotation={10} scale={1.05} label="28" />
+                </g>
 
                 {/* Foramen incisivum (Різцевий отвір) */}
-                <ellipse cx="50" cy="52" rx="3.5" ry="2.8" fill="#14B8A6" fillOpacity="0.3" stroke="#14B8A6" strokeWidth="0.7" />
+                <ellipse cx="50" cy="52" rx="3.5" ry="2.8" fill="#14B8A6" fillOpacity="0.35" stroke="#14B8A6" strokeWidth="0.8" />
                 {!examMode && showAnatomyLabels && (
-                  <text x="50" y="47" textAnchor="middle" fill="#5EEAD4" fontSize="2.5">
+                  <text x="50" y="47" textAnchor="middle" fill="#5EEAD4" fontSize="2.5" fontWeight="bold">
                     Foramen incisivum
                   </text>
                 )}
 
                 {/* Foramen palatinum majus (Великий піднебінний отвір) */}
-                <circle cx="70" cy="60" r="3" fill="#06B6D4" fillOpacity="0.3" stroke="#06B6D4" strokeWidth="0.7" />
-                <circle cx="30" cy="60" r="3" fill="#06B6D4" fillOpacity="0.3" stroke="#06B6D4" strokeWidth="0.7" />
+                <circle cx="70" cy="60" r="3.2" fill="#06B6D4" fillOpacity="0.35" stroke="#06B6D4" strokeWidth="0.8" />
+                <circle cx="30" cy="60" r="3.2" fill="#06B6D4" fillOpacity="0.35" stroke="#06B6D4" strokeWidth="0.8" />
                 {!examMode && showAnatomyLabels && (
-                  <text x="70" y="66" fill="#38BDF8" fontSize="2.3" textAnchor="middle">
+                  <text x="70" y="66" fill="#38BDF8" fontSize="2.3" textAnchor="middle" fontWeight="bold">
                     Foramen palatinum majus
                   </text>
                 )}
 
                 {/* Tuber Maxillae zone (for Tuberal) */}
-                <path d="M 72 70 Q 82 50 78 30" fill="none" stroke="#F59E0B" strokeWidth="1" strokeDasharray="1.5,1.5" />
+                <path d="M 72 75 Q 84 55 80 30" fill="none" stroke="#F59E0B" strokeWidth="1.2" strokeDasharray="1.5,1.5" />
                 {!examMode && showAnatomyLabels && (
-                  <text x="76" y="24" fill="#FCD34D" fontSize="2.4">
+                  <text x="76" y="24" fill="#FCD34D" fontSize="2.4" fontWeight="bold">
                     Tuber maxillae
                   </text>
                 )}
